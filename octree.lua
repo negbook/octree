@@ -6,7 +6,7 @@ local Contains = {
     end,
     pointtobox = function(pointA,box,radius)
         local radius = radius or 0
-        return box.size.x/2 + radius >= pointA.x  and box.size.y/2 + radius >= pointA.y and box.size.z/2 + radius >= pointA.z
+        return pointA.x >= box.center.x - box.size.x/2 - radius and pointA.x <= box.center.x + box.size.x/2 + radius and pointA.y >= box.center.y - box.size.y/2 - radius and pointA.y <= box.center.y + box.size.y/2 + radius and pointA.z >= box.center.z - box.size.z/2 - radius and pointA.z <= box.center.z + box.size.z/2 + radius
     end,
     boxtobox = function(boxA,boxB,radius)
         local radius = radius or 0
