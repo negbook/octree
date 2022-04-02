@@ -15,27 +15,28 @@ local pos = GetEntityCoords(PlayerPedId())
 local tree =  OcTree.new({
     center = pos,
     game_center = pos,
-    size = vector3(80.0,80.0,80.0)
-}, 4)
---[[
-for i=1,1000 do 
-    local x = math.random(0,80)
-    local y = math.random(0,80)
-    local z = math.random(0,80)
+    size = vector3(5.0,5.0,5.0)
+}, 1)
+
+for i=1,100 do 
+    local x = GetRandomFloatInRange(-1.0, 1.0)
+    local y = GetRandomFloatInRange(-1.0, 1.0)
+    local z = GetRandomFloatInRange(-1.0, 1.0)
+    print(x,y,z)
     tree:insert_point(pos+vector3(x,y,z))
 end
-
-for i=1,1000 do 
-    local x = math.random(0,80)
-    local y = math.random(0,80)
-    local z = math.random(0,80)
+--[[
+for i=1,10000 do 
+    local x = GetRandomFloatInRange(0, 10)
+    local y = GetRandomFloatInRange(0, 10)
+    local z = GetRandomFloatInRange(0, 10)
     tree:insert_object("circle?",{
         center = pos+vector3(x,y,z),
         size = vector3(1.0,1.0,1.0),
         whatisthat = "circle"..(i)
     })
 end
-]]
+--]]
 print(tree)
 
 

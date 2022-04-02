@@ -92,29 +92,35 @@ end
 --similar to quadtree.lua
 function OcTree:inner_subdivide()
     local parentcenter = self.center
+    local parentcenterx = parentcenter.x
+    local parentcentery = parentcenter.y
+    local parentcenterz = parentcenter.z
     local parentwidth = self.size.x
     local parentlength = self.size.y
     local parenthight = self.size.z
     local childwidth = parentwidth / 2
     local childlength = parentlength / 2
     local childhight = parenthight / 2
-    local toleftX = parentcenter.x - childwidth/2
-    local toupY = parentcenter.y - childlength/2
-    local tofloorZ = parentcenter.z - childhight/2
+    local childhalfwidth = childwidth / 2
+    local childhalflength = childlength / 2
+    local childhalfhight = childhight / 2
+    local toleftX = parentcenterx - childhalfwidth
+    local toupY = parentcentery - childhalflength
+    local tofloorZ = parentcenterz - childhalfhight
     
-    local torightX = parentcenter.x + childwidth/2
-    local todownY = parentcenter.y + childlength/2
-    local toroofZ = parentcenter.z + childhight/2
+    local torightX = parentcenterx + childhalfwidth
+    local todownY = parentcentery + childhalflength
+    local toroofZ = parentcenterz + childhalfhight
 
-    local childlefttopcenter_topbox = vector3(parentcenter.x - childwidth/2 , parentcenter.y + childlength/2, parentcenter.z + childhight/2)
-    local childrighttopcenter_topbox = vector3(parentcenter.x + childwidth/2 , parentcenter.y + childlength/2, parentcenter.z + childhight/2)
-    local childleftbottomcenter_topbox = vector3(parentcenter.x - childwidth/2 , parentcenter.y - childlength/2, parentcenter.z + childhight/2)
-    local childrightbottomcenter_topbox = vector3(parentcenter.x + childwidth/2 , parentcenter.y - childlength/2, parentcenter.z + childhight/2)
+    local childlefttopcenter_topbox = vector3(toleftX , todownY, toroofZ)
+    local childrighttopcenter_topbox = vector3(torightX , todownY, toroofZ)
+    local childleftbottomcenter_topbox = vector3(toleftX , toupY, toroofZ)
+    local childrightbottomcenter_topbox = vector3(torightX , toupY, toroofZ)
 
-    local childlefttopcenter_bottombox = vector3(parentcenter.x - childwidth/2 , parentcenter.y + childlength/2, parentcenter.z - childhight/2)
-    local childrighttopcenter_bottombox = vector3(parentcenter.x + childwidth/2 , parentcenter.y + childlength/2, parentcenter.z - childhight/2)
-    local childleftbottomcenter_bottombox = vector3(parentcenter.x - childwidth/2 , parentcenter.y - childlength/2, parentcenter.z - childhight/2)
-    local childrightbottomcenter_bottombox = vector3(parentcenter.x + childwidth/2 , parentcenter.y - childlength/2, parentcenter.z - childhight/2)
+    local childlefttopcenter_bottombox = vector3(toleftX , todownY, tofloorZ)
+    local childrighttopcenter_bottombox = vector3(torightX , todownY, tofloorZ)
+    local childleftbottomcenter_bottombox = vector3(toleftX , toupY, tofloorZ)
+    local childrightbottomcenter_bottombox = vector3(torightX , toupY, tofloorZ)
 
     local childsize = vector3(childwidth,childlength,childhight)
     --create new quadtrees in 8 box regions
