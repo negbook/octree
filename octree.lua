@@ -25,11 +25,22 @@ local Contains = {
         local boxCenterx = box.center.x
         local boxCentery = box.center.y
         local boxCenterz = box.center.z
-        local boxSizeX = box.size.x
-        local boxSizeY = box.size.y
-        local boxSizeZ = box.size.z
+        if box.min == nil then 
+            local boxSizeX = box.size.x
+            local boxSizeY = box.size.y
+            local boxSizeZ = box.size.z
 
-        return pointAx >= boxCenterx - boxSizeX/2 - radius and pointAx <= boxCenterx + boxSizeX/2 + radius and pointAy >= boxCentery - boxSizeY/2 - radius and pointAy <= boxCentery + boxSizeY/2 + radius and pointAz >= boxCenterz - boxSizeZ/2 - radius and pointAz <= boxCenterz + boxSizeZ/2 + radius
+            return pointAx >= boxCenterx - boxSizeX/2 - radius and pointAx <= boxCenterx + boxSizeX/2 + radius and pointAy >= boxCentery - boxSizeY/2 - radius and pointAy <= boxCentery + boxSizeY/2 + radius and pointAz >= boxCenterz - boxSizeZ/2 - radius and pointAz <= boxCenterz + boxSizeZ/2 + radius
+        elseif box.max then 
+            local boxMinX = box.min.x
+            local boxMinY = box.min.y
+            local boxMinZ = box.min.z
+            local boxMaxX = box.max.x
+            local boxMaxY = box.max.y
+            local boxMaxZ = box.max.z
+
+            return pointAx >= boxMinX - radius and pointAx <= boxMaxX + radius and pointAy >= boxMinY - radius and pointAy <= boxMaxY + radius and pointAz >= boxMinZ - radius and pointAz <= boxMaxZ + radius
+        end
     end,
     boxtobox = function(boxA,boxB,radius)
         local radius = radius or 0
@@ -340,30 +351,50 @@ function OcTree:query_points_by_point(point, radius, found)
 end
 
 function OcTree:inner_object_contains(object)
-    local center = object.center 
-    local size = object.size
-    --[[
-    return center.x - size.x/2 >= self.center.x - self.size.x/2 and center.x + size.x/2 <= self.center.x + self.size.x/2 and
-           center.y - size.y/2 >= self.center.y - self.size.y/2 and center.y + size.y/2 <= self.center.y + self.size.y/2 and
-           center.z - size.z/2 >= self.center.z - self.size.z/2 and center.z + size.z/2 <= self.center.z + self.size.z/2
-    --]]
-    local selfcenterx = self.center.x
-    local selfcenterz = self.center.z
-    local selfcentery = self.center.y
-    local selfhalfwidth = self.size.x/2
-    local selfhalflength = self.size.y/2
-    local selfhalfhight = self.size.z/2
-    local objectcenterx = center.x
-    local objectcenterz = center.z
-    local objectcentery = center.y
-    local objecthalfwidth = size.x/2
-    local objecthalflength = size.y/2
-    local objecthalfhight = size.z/2
+    local center = object.center
+    if object.min == nil then  
+        local size = object.size
+        --[[
+        return center.x - size.x/2 >= self.center.x - self.size.x/2 and center.x + size.x/2 <= self.center.x + self.size.x/2 and
+            center.y - size.y/2 >= self.center.y - self.size.y/2 and center.y + size.y/2 <= self.center.y + self.size.y/2 and
+            center.z - size.z/2 >= self.center.z - self.size.z/2 and center.z + size.z/2 <= self.center.z + self.size.z/2
+        --]]
+        local selfcenterx = self.center.x
+        local selfcenterz = self.center.z
+        local selfcentery = self.center.y
+        local selfhalfwidth = self.size.x/2
+        local selfhalflength = self.size.y/2
+        local selfhalfhight = self.size.z/2
+        local objectcenterx = center.x
+        local objectcenterz = center.z
+        local objectcentery = center.y
+        local objecthalfwidth = size.x/2
+        local objecthalflength = size.y/2
+        local objecthalfhight = size.z/2
 
-    return (objectcenterx - objecthalfwidth >= selfcenterx - selfhalfwidth and objectcenterx + objecthalfwidth <= selfcenterx + selfhalfwidth and
-            objectcenterz - objecthalflength >= selfcenterz - selfhalflength and objectcenterz + objecthalflength <= selfcenterz + selfhalflength and
-            objectcentery - objecthalfhight >= selfcentery - selfhalfhight and objectcentery + objecthalfhight <= selfcentery + selfhalfhight)
+        return (objectcenterx - objecthalfwidth >= selfcenterx - selfhalfwidth and objectcenterx + objecthalfwidth <= selfcenterx + selfhalfwidth and
+                objectcenterz - objecthalflength >= selfcenterz - selfhalflength and objectcenterz + objecthalflength <= selfcenterz + selfhalflength and
+                objectcentery - objecthalfhight >= selfcentery - selfhalfhight and objectcentery + objecthalfhight <= selfcentery + selfhalfhight)
+    elseif object.max then 
+        local min = object.min
+        local max = object.max
+        local selfcenterx = self.center.x
+        local selfcenterz = self.center.z
+        local selfcentery = self.center.y
+        local selfhalfwidth = self.size.x/2
+        local selfhalflength = self.size.y/2
+        local selfhalfhight = self.size.z/2
+        local objectminx = min.x
+        local objectmaxx = max.x
+        local objectminz = min.z
+        local objectmaxz = max.z
+        local objectminy = min.y
+        local objectmaxy = max.y
 
+        return (objectminx >= selfcenterx - selfhalfwidth and objectmaxx <= selfcenterx + selfhalfwidth and
+                objectminz >= selfcenterz - selfhalflength and objectmaxz <= selfcenterz + selfhalflength and
+                objectminy >= selfcentery - selfhalfhight and objectmaxy <= selfcentery + selfhalfhight)
+    end
 end
 
 
