@@ -25,11 +25,20 @@ local Contains = {
         local boxCenterx = box.center.x
         local boxCentery = box.center.y
         local boxCenterz = box.center.z
+        if box.getminmax then 
+            local boxmin,boxmax = box.getminmax()
+            local boxMinX = boxmin.x
+            local boxMinY = boxmin.y
+            local boxMinZ = boxmin.z
+            local boxMaxX = boxmax.x
+            local boxMaxY = boxmax.y
+            local boxMaxZ = boxmax.z
+            return pointAx >= boxMinX - radius and pointAx <= boxMaxX + radius and pointAy >= boxMinY - radius and pointAy <= boxMaxY + radius and pointAz >= boxMinZ - radius and pointAz <= boxMaxZ + radius
+        end 
         if box.min == nil then 
             local boxSizeX = box.size.x
             local boxSizeY = box.size.y
             local boxSizeZ = box.size.z
-
             return pointAx >= boxCenterx - boxSizeX/2 - radius and pointAx <= boxCenterx + boxSizeX/2 + radius and pointAy >= boxCentery - boxSizeY/2 - radius and pointAy <= boxCentery + boxSizeY/2 + radius and pointAz >= boxCenterz - boxSizeZ/2 - radius and pointAz <= boxCenterz + boxSizeZ/2 + radius
         elseif box.max then 
             local boxMinX = box.min.x
@@ -38,7 +47,6 @@ local Contains = {
             local boxMaxX = box.max.x
             local boxMaxY = box.max.y
             local boxMaxZ = box.max.z
-
             return pointAx >= boxMinX - radius and pointAx <= boxMaxX + radius and pointAy >= boxMinY - radius and pointAy <= boxMaxY + radius and pointAz >= boxMinZ - radius and pointAz <= boxMaxZ + radius
         end
     end,
@@ -352,6 +360,24 @@ end
 
 function OcTree:inner_object_contains(object)
     local center = object.center
+    if object.getminmax then 
+        local min,max = object.getminmax()
+        local selfcenterx = self.center.x
+        local selfcenterz = self.center.z
+        local selfcentery = self.center.y
+        local selfhalfwidth = self.size.x/2
+        local selfhalflength = self.size.y/2
+        local selfhalfhight = self.size.z/2
+        local objectminx = min.x
+        local objectmaxx = max.x
+        local objectminz = min.z
+        local objectmaxz = max.z
+        local objectminy = min.y
+        local objectmaxy = max.y
+        return (objectminx >= selfcenterx - selfhalfwidth and objectmaxx <= selfcenterx + selfhalfwidth and
+                objectminz >= selfcenterz - selfhalflength and objectmaxz <= selfcenterz + selfhalflength and
+                objectminy >= selfcentery - selfhalfhight and objectmaxy <= selfcentery + selfhalfhight)
+    end 
     if object.min == nil then  
         local size = object.size
         --[[
