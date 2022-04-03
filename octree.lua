@@ -294,8 +294,8 @@ function OcTree:insert_point(point)
     end
 end
 
-function OcTree:query_points_by_box(box)
-    local found = found or {}
+function OcTree:query_points_by_box(box,found)
+    found = found or {}
     if not self:inner_intersects(box) then
         return found
     end
@@ -305,20 +305,20 @@ function OcTree:query_points_by_box(box)
         end
     end
     if self.isdivided then
-        table.insert(found,self.topbox_lefttop:query_points_by_box(box))
-        table.insert(found,self.topbox_righttop:query_points_by_box(box))
-        table.insert(found,self.topbox_leftbottom:query_points_by_box(box))
-        table.insert(found,self.topbox_rightbottom:query_points_by_box(box))
-        table.insert(found,self.bottombox_lefttop:query_points_by_box(box))
-        table.insert(found,self.bottombox_righttop:query_points_by_box(box))
-        table.insert(found,self.bottombox_leftbottom:query_points_by_box(box))
-        table.insert(found,self.bottombox_rightbottom:query_points_by_box(box))
+        self.topbox_lefttop:query_points_by_box(box,found)
+        self.topbox_righttop:query_points_by_box(box,found)
+        self.topbox_leftbottom:query_points_by_box(box,found)
+        self.topbox_rightbottom:query_points_by_box(box,found)
+        self.bottombox_lefttop:query_points_by_box(box,found)
+        self.bottombox_righttop:query_points_by_box(box,found)
+        self.bottombox_leftbottom:query_points_by_box(box,found)
+        self.bottombox_rightbottom:query_points_by_box(box,found)
     end
     return found
 end
 
-function OcTree:query_points_by_point(point, radius)
-    local found = found or {}
+function OcTree:query_points_by_point(point, radius, found)
+    found = found or {}
     if not self:inner_point_contains(point, radius) then
         return found
     end
@@ -329,14 +329,14 @@ function OcTree:query_points_by_point(point, radius)
     end
     if self.isdivided then
         
-        table.insert(found,self.topbox_lefttop:query_points_by_point(point, radius))  
-        table.insert(found,self.topbox_righttop:query_points_by_point(point, radius))
-        table.insert(found,self.topbox_leftbottom:query_points_by_point(point, radius))
-        table.insert(found,self.topbox_rightbottom:query_points_by_point(point, radius))
-        table.insert(found,self.bottombox_lefttop:query_points_by_point(point, radius))
-        table.insert(found,self.bottombox_righttop:query_points_by_point(point, radius))
-        table.insert(found,self.bottombox_leftbottom:query_points_by_point(point, radius))
-        table.insert(found,self.bottombox_rightbottom:query_points_by_point(point, radius))
+        self.topbox_lefttop:query_points_by_point(point, radius, found) 
+        self.topbox_righttop:query_points_by_point(point, radius, found) 
+        self.topbox_leftbottom:query_points_by_point(point, radius, found) 
+        self.topbox_rightbottom:query_points_by_point(point, radius, found) 
+        self.bottombox_lefttop:query_points_by_point(point, radius, found) 
+        self.bottombox_righttop:query_points_by_point(point, radius, found) 
+        self.bottombox_leftbottom:query_points_by_point(point, radius, found) 
+        self.bottombox_rightbottom:query_points_by_point(point, radius, found) 
 
          
         
