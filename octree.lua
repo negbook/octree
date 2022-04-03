@@ -100,7 +100,7 @@ function OcTree.new(boundary, capacity)
         __index = OcTree,
         __tostring = function(self)
             return "QuadTree: center: "..self.center.x.." "..self.center.y..
-            " width: "..self.size.x.." height: "..self.size.y..
+            " width: "..self.size.x.." length: "..self.size.y.." hight: "..self.size.z..
             " capacity: "..self.capacity.." points: "..#self.points..
               " isdivided: "..tostring(self.isdivided).."\nobjects: "..tostring(self.objects)
             
@@ -244,10 +244,10 @@ function OcTree:inner_intersects(box)
 
     return (boxcenterx + boxhalfwidth > selfcenterx - selfhalfwidth and
             boxcenterx - boxhalfwidth < selfcenterx + selfhalfwidth and
-            boxcenterz + boxhalflength > selfcenterz - selfhalflength and
-            boxcenterz - boxhalflength < selfcenterz + selfhalflength and
-            boxcentery + boxhalfhight > selfcentery - selfhalfhight and
-            boxcentery - boxhalfhight < selfcentery + selfhalfhight)
+            boxcentery + boxhalflength > selfcentery - selfhalflength and
+            boxcentery - boxhalflength < selfcentery + selfhalflength and
+            boxcenterz + boxhalfhight > selfcenterz - selfhalfhight and
+            boxcenterz - boxhalfhight < selfcenterz + selfhalfhight)
 end
 
 function OcTree:inner_point_contains (point, radius)
@@ -268,8 +268,8 @@ function OcTree:inner_point_contains (point, radius)
     local selfhalfhight_withradius = self.size.z/2 + radius
 
     return (pointx >= selfcenterx - selfhalfwidth_withradius and pointx <= selfcenterx + selfhalfwidth_withradius and
-            pointz >= selfcenterz - selfhalflength_withradius and pointz <= selfcenterz + selfhalflength_withradius and
-            pointy >= selfcentery - selfhalfhight_withradius and pointy <= selfcentery + selfhalfhight_withradius)
+            pointy >= selfcentery - selfhalflength_withradius and pointy <= selfcentery + selfhalflength_withradius and
+            pointz >= selfcenterz - selfhalfhight_withradius and pointz <= selfcenterz + selfhalfhight_withradius)
 
 end
 
@@ -375,8 +375,8 @@ function OcTree:inner_object_contains(object)
         local objectminy = min.y
         local objectmaxy = max.y
         return (objectminx >= selfcenterx - selfhalfwidth and objectmaxx <= selfcenterx + selfhalfwidth and
-                objectminz >= selfcenterz - selfhalflength and objectmaxz <= selfcenterz + selfhalflength and
-                objectminy >= selfcentery - selfhalfhight and objectmaxy <= selfcentery + selfhalfhight)
+                objectminy >= selfcentery - selfhalflength and objectmaxy <= selfcenterz + selfhalflength and
+                objectminz >= selfcenterz - selfhalfhight and objectmaxz <= selfcentery + selfhalfhight)
     end 
     if object.min == nil then  
         local size = object.size
@@ -425,9 +425,11 @@ end
 
 
 function OcTree:insert_object(catagary_name,object)
+    
     if not self:inner_object_contains(object) then
         return false
     end
+    
     if not self.objects[catagary_name] then
         self.objects[catagary_name] = {}
     end
@@ -494,17 +496,22 @@ function OcTree:query_objects_by_box(catagary_name, box, found)
 end
 
 function OcTree:query_objects_by_point(catagary_name, point, radius, found)
+    
     found = found or {}
     if not self:inner_point_contains(point, radius) then
+       
         return found
     end
+    
     if self.objects[catagary_name] then 
+       
         for _, object in ipairs(self.objects[catagary_name]) do
             if Contains.pointtobox(point, object, radius) then
                 table.insert(found, object)
             end
         end
     else 
+       
         return found
     
     end 
