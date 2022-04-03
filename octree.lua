@@ -22,9 +22,17 @@ local Contains = {
         local pointAx = pointA.x
         local pointAy = pointA.y
         local pointAz = pointA.z
-        local boxCenterx = box.center.x
-        local boxCentery = box.center.y
-        local boxCenterz = box.center.z
+        local boxCenterx
+        local boxCentery
+        local boxCenterz
+        if box.getcenter then 
+            local boxcenter = box.getcenter()
+            boxCenterx,boxCentery,boxCenterz = boxcenter.x,boxcenter.y,boxcenter.z 
+        else 
+            boxCenterx = box.center.x
+            boxCentery = box.center.y
+            boxCenterz = box.center.z
+        end 
         if box.getminmax then 
             local boxmin,boxmax = box.getminmax()
             local boxMinX = boxmin.x
@@ -50,25 +58,6 @@ local Contains = {
             return pointAx >= boxMinX - radius and pointAx <= boxMaxX + radius and pointAy >= boxMinY - radius and pointAy <= boxMaxY + radius and pointAz >= boxMinZ - radius and pointAz <= boxMaxZ + radius
         end
     end,
-    boxtobox = function(boxA,boxB,radius)
-        local radius = radius or 0
-        --return boxA.center.x - boxA.size.x/2 - radius <=  boxB.center.x + boxB.size.x/2 + radius and boxA.center.y - boxA.size.y/2 - radius <=  boxB.center.y + boxB.size.y/2 + radius and boxA.center.z - boxA.size.z/2 - radius <=  boxB.center.z + boxB.size.z/2 + radius
-        local boxACenterx = boxA.center.x
-        local boxACentery = boxA.center.y
-        local boxACenterz = boxA.center.z
-        local boxASizeX = boxA.size.x
-        local boxASizeY = boxA.size.y
-        local boxASizeZ = boxA.size.z
-
-        local boxBCenterx = boxB.center.x
-        local boxBCentery = boxB.center.y
-        local boxBCenterz = boxB.center.z
-        local boxBSizeX = boxB.size.x
-        local boxBSizeY = boxB.size.y
-        local boxBSizeZ = boxB.size.z
-
-        return boxACenterx - boxASizeX/2 - radius <=  boxBCenterx + boxBSizeX/2 + radius and boxACentery - boxASizeY/2 - radius <=  boxBCentery + boxBSizeY/2 + radius and boxACenterz - boxASizeZ/2 - radius <=  boxBCenterz + boxBSizeZ/2 + radius
-    end,
 }
 
 function OcTree.new(boundary, capacity)
@@ -84,17 +73,9 @@ function OcTree.new(boundary, capacity)
         size = boundary.size,
         capacity = capacity or 4,
         points = {},
-        objects = {},
         isdivided = false,
         isinquery = false,
     }
-    setmetatable(o.objects,{__tostring = function(t) 
-        local r = ""
-        for i,v in pairs(t) do 
-            r = r .. i.."("..#v..")" .. " "
-        end 
-        return r
-    end})
     return setmetatable(
     o, {
         __index = OcTree,
@@ -102,7 +83,7 @@ function OcTree.new(boundary, capacity)
             return "QuadTree: center: "..self.center.x.." "..self.center.y..
             " width: "..self.size.x.." length: "..self.size.y.." hight: "..self.size.z..
             " capacity: "..self.capacity.." points: "..#self.points..
-              " isdivided: "..tostring(self.isdivided).."\nobjects: "..tostring(self.objects)
+              " isdivided: "..tostring(self.isdivided)
             
         end
     })
@@ -275,6 +256,7 @@ end
 
 function OcTree:insert_point(point)
     if not self:inner_point_contains(point) then
+
         return false
     end
     if #self.points < self.capacity then
@@ -312,8 +294,8 @@ function OcTree:insert_point(point)
     end
 end
 
-function OcTree:query_points_by_box(box, found)
-    found = found or {}
+function OcTree:query_points_by_box(box)
+    local found = found or {}
     if not self:inner_intersects(box) then
         return found
     end
@@ -323,20 +305,20 @@ function OcTree:query_points_by_box(box, found)
         end
     end
     if self.isdivided then
-        self.topbox_lefttop:query_points_by_box(box, found)
-        self.topbox_righttop:query_points_by_box(box, found)
-        self.topbox_leftbottom:query_points_by_box(box, found)
-        self.topbox_rightbottom:query_points_by_box(box, found)
-        self.bottombox_lefttop:query_points_by_box(box, found)
-        self.bottombox_righttop:query_points_by_box(box, found)
-        self.bottombox_leftbottom:query_points_by_box(box, found)
-        self.bottombox_rightbottom:query_points_by_box(box, found)
+        table.insert(found,self.topbox_lefttop:query_points_by_box(box))
+        table.insert(found,self.topbox_righttop:query_points_by_box(box))
+        table.insert(found,self.topbox_leftbottom:query_points_by_box(box))
+        table.insert(found,self.topbox_rightbottom:query_points_by_box(box))
+        table.insert(found,self.bottombox_lefttop:query_points_by_box(box))
+        table.insert(found,self.bottombox_righttop:query_points_by_box(box))
+        table.insert(found,self.bottombox_leftbottom:query_points_by_box(box))
+        table.insert(found,self.bottombox_rightbottom:query_points_by_box(box))
     end
     return found
 end
 
-function OcTree:query_points_by_point(point, radius, found)
-    found = found or {}
+function OcTree:query_points_by_point(point, radius)
+    local found = found or {}
     if not self:inner_point_contains(point, radius) then
         return found
     end
@@ -346,188 +328,22 @@ function OcTree:query_points_by_point(point, radius, found)
         end
     end
     if self.isdivided then
-        self.topbox_lefttop:query_points_by_point(point, radius, found)
-        self.topbox_righttop:query_points_by_point(point, radius, found)
-        self.topbox_leftbottom:query_points_by_point(point, radius, found)
-        self.topbox_rightbottom:query_points_by_point(point, radius, found)
-        self.bottombox_lefttop:query_points_by_point(point, radius, found)
-        self.bottombox_righttop:query_points_by_point(point, radius, found)
-        self.bottombox_leftbottom:query_points_by_point(point, radius, found)
-        self.bottombox_rightbottom:query_points_by_point(point, radius, found)
+        
+        table.insert(found,self.topbox_lefttop:query_points_by_point(point, radius))  
+        table.insert(found,self.topbox_righttop:query_points_by_point(point, radius))
+        table.insert(found,self.topbox_leftbottom:query_points_by_point(point, radius))
+        table.insert(found,self.topbox_rightbottom:query_points_by_point(point, radius))
+        table.insert(found,self.bottombox_lefttop:query_points_by_point(point, radius))
+        table.insert(found,self.bottombox_righttop:query_points_by_point(point, radius))
+        table.insert(found,self.bottombox_leftbottom:query_points_by_point(point, radius))
+        table.insert(found,self.bottombox_rightbottom:query_points_by_point(point, radius))
+
+         
+        
+
     end
     return found
 end
-
-function OcTree:inner_object_contains(object)
-    local center = object.center
-    if object.getminmax then 
-        local min,max = object.getminmax()
-        local selfcenterx = self.center.x
-        local selfcenterz = self.center.z
-        local selfcentery = self.center.y
-        local selfhalfwidth = self.size.x/2
-        local selfhalflength = self.size.y/2
-        local selfhalfhight = self.size.z/2
-        local objectminx = min.x
-        local objectmaxx = max.x
-        local objectminz = min.z
-        local objectmaxz = max.z
-        local objectminy = min.y
-        local objectmaxy = max.y
-        return (objectminx >= selfcenterx - selfhalfwidth and objectmaxx <= selfcenterx + selfhalfwidth and
-                objectminy >= selfcentery - selfhalflength and objectmaxy <= selfcenterz + selfhalflength and
-                objectminz >= selfcenterz - selfhalfhight and objectmaxz <= selfcentery + selfhalfhight)
-    end 
-    if object.min == nil then  
-        local size = object.size
-        --[[
-        return center.x - size.x/2 >= self.center.x - self.size.x/2 and center.x + size.x/2 <= self.center.x + self.size.x/2 and
-            center.y - size.y/2 >= self.center.y - self.size.y/2 and center.y + size.y/2 <= self.center.y + self.size.y/2 and
-            center.z - size.z/2 >= self.center.z - self.size.z/2 and center.z + size.z/2 <= self.center.z + self.size.z/2
-        --]]
-        local selfcenterx = self.center.x
-        local selfcenterz = self.center.z
-        local selfcentery = self.center.y
-        local selfhalfwidth = self.size.x/2
-        local selfhalflength = self.size.y/2
-        local selfhalfhight = self.size.z/2
-        local objectcenterx = center.x
-        local objectcenterz = center.z
-        local objectcentery = center.y
-        local objecthalfwidth = size.x/2
-        local objecthalflength = size.y/2
-        local objecthalfhight = size.z/2
-
-        return (objectcenterx - objecthalfwidth >= selfcenterx - selfhalfwidth and objectcenterx + objecthalfwidth <= selfcenterx + selfhalfwidth and
-                objectcenterz - objecthalflength >= selfcenterz - selfhalflength and objectcenterz + objecthalflength <= selfcenterz + selfhalflength and
-                objectcentery - objecthalfhight >= selfcentery - selfhalfhight and objectcentery + objecthalfhight <= selfcentery + selfhalfhight)
-    elseif object.max then 
-        local min = object.min
-        local max = object.max
-        local selfcenterx = self.center.x
-        local selfcenterz = self.center.z
-        local selfcentery = self.center.y
-        local selfhalfwidth = self.size.x/2
-        local selfhalflength = self.size.y/2
-        local selfhalfhight = self.size.z/2
-        local objectminx = min.x
-        local objectmaxx = max.x
-        local objectminz = min.z
-        local objectmaxz = max.z
-        local objectminy = min.y
-        local objectmaxy = max.y
-
-        return (objectminx >= selfcenterx - selfhalfwidth and objectmaxx <= selfcenterx + selfhalfwidth and
-                objectminz >= selfcenterz - selfhalflength and objectmaxz <= selfcenterz + selfhalflength and
-                objectminy >= selfcentery - selfhalfhight and objectmaxy <= selfcentery + selfhalfhight)
-    end
-end
-
-
-function OcTree:insert_object(catagary_name,object)
-    
-    if not self:inner_object_contains(object) then
-        return false
-    end
-    
-    if not self.objects[catagary_name] then
-        self.objects[catagary_name] = {}
-    end
-    if #self.objects[catagary_name] < self.capacity then
-        table.insert(self.objects[catagary_name], object)
-        return true
-    else 
-        if not self.isdivided then
-            self:inner_subdivide()
-        end
-        if self.topbox_lefttop:insert_object(catagary_name,object) then
-            return true 
-        end
-        if self.topbox_righttop:insert_object(catagary_name,object) then
-            return true 
-        end
-        if self.topbox_leftbottom:insert_object(catagary_name,object) then
-            return true 
-        end
-        if self.topbox_rightbottom:insert_object(catagary_name,object) then
-            return true 
-        end
-        if self.bottombox_lefttop:insert_object(catagary_name,object) then
-            return true 
-        end
-        if self.bottombox_righttop:insert_object(catagary_name,object) then
-            return true 
-        end
-        if self.bottombox_leftbottom:insert_object(catagary_name,object) then
-            return true 
-        end
-        if self.bottombox_rightbottom:insert_object(catagary_name,object) then
-            return true 
-        end
-        return false
-    end
-end
-
-function OcTree:query_objects_by_box(catagary_name, box, found)
-    found = found or {}
-    if not self:inner_intersects(box) then
-        return found
-    end
-    if self.objects[catagary_name] then 
-        for _, object in ipairs(self.objects[catagary_name]) do
-            if Contains.boxtobox(object, box) then
-                table.insert(found, object)
-            end
-        end
-    else 
-        return found
-    end 
-    if self.isdivided then
-        self.topbox_lefttop:query_objects_by_box(catagary_name, box, found)
-        self.topbox_righttop:query_objects_by_box(catagary_name, box, found)
-        self.topbox_leftbottom:query_objects_by_box(catagary_name, box, found)
-        self.topbox_rightbottom:query_objects_by_box(catagary_name, box, found)
-        self.bottombox_lefttop:query_objects_by_box(catagary_name, box, found)
-        self.bottombox_righttop:query_objects_by_box(catagary_name, box, found)
-        self.bottombox_leftbottom:query_objects_by_box(catagary_name, box, found)
-        self.bottombox_rightbottom:query_objects_by_box(catagary_name, box, found)
-    end
-    return found
-end
-
-function OcTree:query_objects_by_point(catagary_name, point, radius, found)
-    
-    found = found or {}
-    if not self:inner_point_contains(point, radius) then
-       
-        return found
-    end
-    
-    if self.objects[catagary_name] then 
-       
-        for _, object in ipairs(self.objects[catagary_name]) do
-            if Contains.pointtobox(point, object, radius) then
-                table.insert(found, object)
-            end
-        end
-    else 
-       
-        return found
-    
-    end 
-    if self.isdivided then
-        self.topbox_lefttop:query_objects_by_point(catagary_name, point, radius, found)
-        self.topbox_righttop:query_objects_by_point(catagary_name, point, radius, found)
-        self.topbox_leftbottom:query_objects_by_point(catagary_name, point, radius, found)
-        self.topbox_rightbottom:query_objects_by_point(catagary_name, point, radius, found)
-        self.bottombox_lefttop:query_objects_by_point(catagary_name, point, radius, found)
-        self.bottombox_righttop:query_objects_by_point(catagary_name, point, radius, found)
-        self.bottombox_leftbottom:query_objects_by_point(catagary_name, point, radius, found)
-        self.bottombox_rightbottom:query_objects_by_point(catagary_name, point, radius, found)
-    end
-    return found
-end
-
 
 
     
@@ -573,7 +389,7 @@ function OcTree:DrawGrids()
     for i,v in pairs(self.points) do 
         DrawPixel(v,0.01,math.random(0,255),math.random(0,255),math.random(0,255),255)
     end
-    
+
     if self.isdivided then
         self.topbox_lefttop:DrawGrids()
         self.topbox_righttop:DrawGrids()
