@@ -294,6 +294,47 @@ function OcTree:insert_point(point)
     end
 end
 
+function OcTree:remove_point(point)
+    if not self:inner_point_contains(point) then
+        return false
+    end
+    if #self.points > 0 then
+        for i,v in ipairs(self.points) do
+            if v == point then
+                table.remove(self.points, i)
+                return true
+            end
+        end
+    end
+    if self.isdivided then
+        if self.topbox_lefttop:remove_point(point) then
+            return true 
+        end
+        if self.topbox_righttop:remove_point(point) then
+            return true 
+        end
+        if self.topbox_leftbottom:remove_point(point) then
+            return true 
+        end
+        if self.topbox_rightbottom:remove_point(point) then
+            return true 
+        end
+        if self.bottombox_lefttop:remove_point(point) then
+            return true 
+        end
+        if self.bottombox_righttop:remove_point(point) then
+            return true 
+        end
+        if self.bottombox_leftbottom:remove_point(point) then
+            return true 
+        end
+        if self.bottombox_rightbottom:remove_point(point) then
+            return true 
+        end
+    end
+    return false
+end
+
 function OcTree:query_points_by_box(box,found)
     found = found or {}
     if not self:inner_intersects(box) then
